@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Task Smash</title>
+{% endblock %}
+
+{% block body %}
+<div class="page-shell">
+    <div class="app-card">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Productivity dashboard</p>
+                <h1>Task Smash</h1>
+            </div>
+            <span class="status-pill">{{ tasks | length }} tasks</span>
+        </header>
+
+        <form action="/" method="POST" class="task-form">
+            <div class="input-row">
+                <input type="text" name="content" id="content" placeholder="Add a new task..." required>
+                <button type="submit" class="btn btn-primary">Add Task</button>
+            </div>
+        </form>
+
+        {% if tasks | length < 1 %}
+        <div class="empty-state">
+            <h3>No tasks yet</h3>
+            <p>Create your first task above to get started.</p>
+        </div>
+        {% else %}
+        <div class="table-wrap">
+            <table class="task-table">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Added</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td class="task-text">{{ task.content }}</td>
+                        <td class="task-date">{{ task.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="action-group">
+                                <form action="{{ url_for('delete', id=task.id) }}" method="POST" class="inline-form">
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </form>
+                                <a href="{{ url_for('update', id=task.id) }}" class="btn btn-secondary">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
