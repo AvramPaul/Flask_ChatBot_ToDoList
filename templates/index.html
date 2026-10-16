@@ -5,57 +5,125 @@
 {% endblock %}
 
 {% block body %}
-<div class="page-shell">
-    <div class="app-card">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Productivity dashboard</p>
-                <h1>Task Smash</h1>
+<div class="layout">
+    <aside class="chat-panel">
+        <div class="chat-card">
+            <div class="chat-header">
+                <h2>AI Assistant</h2>
+                <span class="chat-status">Online</span>
             </div>
-            <span class="status-pill">{{ tasks | length }} tasks</span>
-        </header>
 
-        <form action="/" method="POST" class="task-form">
-            <div class="input-row">
-                <input type="text" name="content" id="content" placeholder="Add a new task..." required>
-                <button type="submit" class="btn btn-primary">Add Task</button>
+            <div class="chat-messages">
+                <div class="message bot">Hi! Ask me to add, update, or delete a task.</div>
             </div>
-        </form>
 
-        {% if tasks | length < 1 %}
-        <div class="empty-state">
-            <h3>No tasks yet</h3>
-            <p>Create your first task above to get started.</p>
+            <form id="chat-form" class="chat-form">
+                <input type="text" id="chat-input" placeholder="Speak or type..." aria-label="Chat input">
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
         </div>
-        {% else %}
-        <div class="table-wrap">
-            <table class="task-table">
-                <thead>
-                    <tr>
-                        <th>Task</th>
-                        <th>Added</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for task in tasks %}
-                    <tr>
-                        <td class="task-text">{{ task.content }}</td>
-                        <td class="task-date">{{ task.date.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>
-                            <div class="action-group">
-                                <form action="{{ url_for('delete', id=task.id) }}" method="POST" class="inline-form">
-                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                </form>
-                                <a href="{{ url_for('update', id=task.id) }}" class="btn btn-secondary">Edit</a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    </aside>
+
+    <main class="task-panel">
+        <div class="app-card">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">Productivity dashboard</p>
+                    <h1>Task Smash</h1>
+                </div>
+                <span class="status-pill">{{ tasks | length }} tasks</span>
+            </header>
+
+            <form action="/" method="POST" class="task-form">
+                <div class="input-row">
+                    <input type="text" name="content" id="content" placeholder="Add a new task..." required>
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                </div>
+            </form>
+
+            {% if tasks | length < 1 %}
+            <div class="empty-state">
+                <h3>No tasks yet</h3>
+                <p>Create your first task above to get started.</p>
+            </div>
+            {% else %}
+            <div class="table-wrap">
+                <table class="task-table">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr>
+                            <td class="task-text">{{ task.content }}</td>
+                            <td class="task-date">{{ task.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <div class="action-group">
+                                    <form action="{{ url_for('tasks.delete', id=task.id) }}" method="POST" class="inline-form">
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                    <a href="{{ url_for('tasks.update', id=task.id) }}" class="btn btn-secondary">Edit</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
-    </div>
+    </main>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.querySelector('.chat-messages');
+
+        function addMessage(role, text) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.textContent = text;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const message = chatInput.value.trim();
+            if (!message) {
+                return;
+            }
+
+            addMessage('user', message);
+            chatInput.value = '';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Chat request failed');
+                }
+
+                addMessage('bot', data.reply);
+            } catch (error) {
+                addMessage('bot', 'Something went wrong: ' + error.message);
+            }
+        });
+    });
+</script>
 {% endblock %}

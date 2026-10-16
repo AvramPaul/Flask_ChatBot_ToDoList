@@ -14,14 +14,14 @@
             </div>
         </header>
 
-        <form action="{{ url_for('update', id=task_to_update.id) }}" method="POST" class="task-form">
+        <form action="{{ url_for('tasks.update', id=task_to_update.id) }}" method="POST" class="task-form">
             <div class="input-row stacked-row">
                 <input type="text" name="content" id="content" value="{{ task_to_update.content }}" required>
                 <button type="submit" class="btn btn-primary">Save changes</button>
             </div>
         </form>
 
-        <a href="{{ url_for('index') }}" class="back-link">← Back to tasks</a>
+        <a href="{{ url_for('home.index') }}" class="back-link">← Back to tasks</a>
     </div>
 </div>
 {% endblock %}
